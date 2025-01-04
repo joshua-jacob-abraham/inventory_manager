@@ -1,0 +1,8 @@
+pandas
+reportlab
+PyPDF2
+mysql-connector-python
+fpdf
+pydantic
+fastapi
+uvicorn

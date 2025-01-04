@@ -1,0 +1,94 @@
+.loginDash {
+  background: #FDFCDC; /* Light off-white background */
+  padding: 10px 60px;
+  padding-top: 0px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+h1 {
+  font-size: 30px;
+  color: rgb(230, 127, 127); /* Soft salmon pink */
+  margin-bottom: 0px;
+}
+
+/* Form Styling */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Adds spacing between inputs */
+  align-items: center;
+}
+
+.formDat {
+  padding: 12px 15px;
+  border: 1px solid #2D605E;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 350px;
+  font-size: 16px;
+  font-family: Arial, sans-serif;
+  background-color: #FDFCDC; 
+  color: #2D605E; 
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.formDat::placeholder {
+  color: #9CA3AF; /* Light gray placeholder text */
+  font-size: 14px;
+}
+
+.formDat:focus {
+  outline: none;
+}
+
+.submitbutton {
+  background-color: #2D605E; /* Teal button */
+  color: #FDFCDC; /* Off-white text */
+  padding: 10px 20px;
+  font-size: 18px;
+  font-weight: lighter;
+  font-family: 'Times New Roman', Times, serif;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  max-width: 350px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.submitbutton:hover {
+  background-color: #1c3f3e; /* Darker teal on hover */
+}
+
+.submitbutton:active {
+  background-color: #275654;
+}
+
+/* Responsive Styling */
+@media (max-width: 500px) {
+  .loginDash {
+    padding: 15px;
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .formDat {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .submitbutton {
+    font-size: 14px;
+  }
+}

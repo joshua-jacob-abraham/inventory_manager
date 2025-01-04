@@ -1,0 +1,108 @@
+.stock{
+  background-color: lightcoral;
+  flex: 5;
+  font-size: 16px;
+  font-weight: lighter;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  display: grid;
+  gap: 5px;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(11, auto);
+  padding: 10px;
+}
+
+.dashboard{
+  width: 100%;
+  height: 80vh;
+  background-color: red;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+}
+
+.dateReturn, .details{
+  padding: 8px 12px;
+  font-size: 1.2rem;
+  border: none;
+}
+
+.details{
+  padding: 8px 12px;
+  border-radius: 5px;
+}
+
+.details:focus{
+  outline: none;
+}
+
+.details.storeReturn {
+  grid-column: span 1;
+  grid-row: 1;
+}
+
+.details.codeReturn {
+  grid-column: 1 / span 1; 
+  grid-row: 2;
+}
+
+.dateReturn {
+  grid-column: 2 / span 1;
+  grid-row: 1; 
+  border-radius: 5px;
+}
+
+.thesizesReturn {
+  grid-column: 3 / span 2;
+  grid-row: 1 / span 2; 
+}
+
+.itemSize{
+  font-size: 20px;
+  color: rgb(51, 51, 51);
+}
+
+.thesizesReturn{
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+.theactionReturn{
+  display: flex;
+  justify-content: space-between;
+  grid-column: 2 / span 1;
+  grid-row: 2;
+}
+
+.action{
+  flex: 1;
+  font-size: 2em;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  color: lightcoral;
+  border: none;
+  border-radius: 5px;
+  background-color: #FDFCDC;
+  cursor: pointer;
+  border-bottom-right-radius: 15px;
+}
+
+.actAdd{
+  border-bottom-right-radius: 5px;
+  margin-right: 6px;
+}
+
+.action:focus{
+  outline: none;
+}
+
+.selectedItemsReturn{
+  grid-column: 1 / span 5;
+  grid-row: 3 / span 9;
+  padding-bottom: 10px;
+  max-height: 350px;
+}
+
+.submitReturn{
+  border-bottom-right-radius: 5px;
+}

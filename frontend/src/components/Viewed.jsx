@@ -1,7 +1,7 @@
 import React from 'react';
 import "../styles/Selected.css";
 
-const ViewedItemsTable = ({ data }) => {
+const ViewedItemsTable = ({ data, isDisabled }) => {
   return (
     <div className="selected-table-container">
       <table className="selected-table">
@@ -11,9 +11,13 @@ const ViewedItemsTable = ({ data }) => {
             <th>Size</th>
             <th>Price</th>
             <th>Qnty</th>
-            <th>GST Rate</th>
-            <th>Taxable Amount</th>
-            <th>Tax Amount</th>
+            {!isDisabled && (
+              <>
+                <th>GST Rate</th>
+                <th>Taxable Amount</th>
+                <th>Tax Amount</th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -21,11 +25,15 @@ const ViewedItemsTable = ({ data }) => {
             <tr key={item.design_code}>
               <td>{item.design_code}</td>
               <td>{item.size}</td>
-              <td>{item.price}</td>
-              <td>{item.quantity}</td>
-              <td>{item.gst_rate}%</td>
-              <td>{item.taxable_amount}</td>
-              <td>{item.tax_amount}</td>
+              <td>{item.sp_per_item}</td>
+              <td>{item.qty}</td>
+              {!isDisabled && (
+                <>
+                  <td>{item.gst_rate}%</td>
+                  <td>{item.taxable_amount}</td>
+                  <td>{item.tax_amount}</td>
+                </>
+              )}
             </tr>
           ))}
         </tbody>

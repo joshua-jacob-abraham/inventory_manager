@@ -8,7 +8,7 @@
   display: grid;
   gap: 5px;
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(11, auto);
+  grid-template-rows: repeat(11, minmax(40px,auto));
   padding: 10px;
 }
 
@@ -69,6 +69,10 @@
   border-radius: 5px;
   background-color: #FDFCDC;
   cursor: pointer;
+}
+
+.printView:disabled{
+  background-color: #ebeacd;
 }
 
 .get{

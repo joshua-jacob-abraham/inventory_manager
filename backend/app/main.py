@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 import mysql.connector as ms
 from fastapi.middleware.cors import CORSMiddleware
 from models import StockItem,ReturnedItem
-from services import submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,generate_pdf,is_valid_name
+from services import submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,generate_pdf,lookupforpdf
 from database import get_db_connection
 from datetime import datetime
 
@@ -99,7 +99,7 @@ async def view_action(brand_name : str,store_name : str, date: str, action : str
 		if not action_on_date:
 			return {"message": f"Action not performed on {date} in {store_name}.", "data" : []}
 
-		return {"message": f"{action} stock - {date} - {store_name}.", "data": action_on_date}
+		return {"message": f"{action} stock on {date} at {store_name}.", "data": action_on_date}
 	
 	except Exception as e:
 		raise HTTPException(status_code=500, detail=str(e))
@@ -168,7 +168,7 @@ async def print_table(
 	connection = get_db_connection(brand_name)
 	
 
-	stock_data = lookup(store_name,date,action,connection)
+	stock_data = lookupforpdf(store_name,date,action,connection)
 	if stock_data is None or not stock_data:
 		raise HTTPException(status_code=404, detail="No stock data found for the specified parameters.")
 	

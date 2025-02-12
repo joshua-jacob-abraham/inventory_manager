@@ -102,7 +102,15 @@ def lookup(store_name : str, date : str, action : str, connection):
         the_table = f"{store_name}_{formatted_date}_return_stock"    
 
     try:
-        cursor.execute(f"""SELECT * FROM {the_table}""")
+        cursor.execute(f"""SELECT 
+            DESIGN_CODE AS design_code, 
+            SIZE AS size, 
+            SP_PER_ITEM AS sp_per_item, 
+            QTY AS qty, 
+            GST_RATE AS gst_rate, 
+            TAXABLE_AMOUNT_PER_ITEM AS taxable_amount, 
+            TAX_AMOUNT_PER_ITEM AS tax_amount 
+            FROM {the_table};""")
         shelf = cursor.fetchall()
         return shelf
     except ms.errors.ProgrammingError as e:
@@ -159,6 +167,43 @@ def remove_from_temp(store_key : str, code : str):
         del temp_stock_data[store_key][index]
     return temp_stock_data[store_key]    
 
+
+#lookupforpdf
+def lookupforpdf(store_name : str, date : str, action : str, connection):
+    cursor = connection.cursor(dictionary = True)
+    
+    date_obj = datetime.strptime(date,"%Y-%m-%d")
+    formatted_date = date_obj.strftime("%d_%b_%Y")
+    
+    the_table = ""
+    if action == "new":
+        the_table = f"{store_name}_{formatted_date}_new_stock"
+    elif action == "return":
+        the_table = f"{store_name}_{formatted_date}_return_stock"    
+
+    try:
+        cursor.execute(f"""SELECT 
+            ITEM AS item,
+            DESIGN_CODE AS design_code, 
+            SIZE AS size, 
+            SP_PER_ITEM AS sp_per_item, 
+            QTY AS qty, 
+            GST_RATE AS gst_rate, 
+            TAXABLE_AMOUNT_PER_ITEM AS taxable_amount, 
+            TAX_AMOUNT_PER_ITEM AS tax_amount 
+            FROM {the_table};""")
+        shelf = cursor.fetchall()
+        return shelf
+    except ms.errors.ProgrammingError as e:
+        if e.errno == 1146:
+            return None
+        raise Exception(f"Error fetching data: {e}")
+    except Exception as e:
+        raise Exception(f"Unexpected error: {e}")
+    finally:
+        cursor.close()
+
+
 #pdf
 from reportlab.lib.pagesizes import letter, landscape
 
@@ -213,15 +258,15 @@ def generate_pdf(store_name: str, date: str, action: str, stock_data: list) -> s
 
     for item in stock_data:
         table_data.append([
-            item["ITEM"],
-            item["DESIGN_CODE"],
-            f"{item['SP_PER_ITEM']:.2f}",
-            item["GST_RATE"],
-            item.get("HSNCODE", "62092000"), 
-            f"{item['TAXABLE_AMOUNT_PER_ITEM']:.2f}",
-            f"{item['TAX_AMOUNT_PER_ITEM']:.2f}",
-            item["QTY"],
-            item["SIZE"]
+            item["item"],
+            item["design_code"],
+            f"{item['sp_per_item']:.2f}",
+            item["gst_rate"],
+            item.get("hsncode", "62092000"),
+            f"{item['taxable_amount']:.2f}",
+            f"{item['tax_amount']:.2f}",
+            item["qty"],
+            item["size"]
         ])
 
     num_columns = len(table_data[0])

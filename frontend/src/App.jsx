@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Dash from './Pages/Dash.jsx';
 import NewStock from "./Pages/New.jsx";
 import ReturnStock from './Pages/Return.jsx';

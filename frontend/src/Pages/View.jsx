@@ -17,8 +17,8 @@ function ViewStock() {
 
   const handleCheckChange = (checked) => {
     setIsDisabled(checked);
-    if(!checked){
-      setSampleData([])
+    if (!checked) {
+      setSampleData([]);
     }
   };
 
@@ -33,10 +33,22 @@ function ViewStock() {
             date: date,
             action: action,
           },
+          responseType: "blob",
         }
       );
 
-      alert(response.data.message || "Saved as pdf!");
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      const a = document.createElement("a");
+      a.href = pdfUrl;
+      a.download = `${storeName}_${date}_${action}_stock.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(pdfUrl);
+      // alert(response.data.message || "Saved as pdf!");
     } catch (error) {
       console.error(
         "Error printing as pdf:",
@@ -54,8 +66,8 @@ function ViewStock() {
         );
 
         setSampleData(response.data.data);
-        console.log(response)
-        if(response.data.data.length == 0){
+        console.log(response);
+        if (response.data.data.length == 0) {
           alert(response.data.message);
         }
       } catch (error) {
@@ -72,11 +84,10 @@ function ViewStock() {
         );
 
         setSampleData(response.data.data);
-        console.log(response)
-        if(response.data.data.length == 0){
+        console.log(response);
+        if (response.data.data.length == 0) {
           alert(response.data.message);
         }
-        
       } catch (error) {
         console.error(
           "Error viewing the data:",
@@ -129,7 +140,7 @@ function ViewStock() {
         </button>
 
         <div className="viewedItems">
-          <ViewedItemsTable data={sampleData} isDisabled={isDisabled}/>
+          <ViewedItemsTable data={sampleData} isDisabled={isDisabled} />
         </div>
       </div>
     </div>

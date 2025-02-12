@@ -3,9 +3,11 @@ from fastapi.responses import FileResponse
 import mysql.connector as ms
 from fastapi.middleware.cors import CORSMiddleware
 from models import StockItem,ReturnedItem
-from services import submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,generate_pdf,lookupforpdf
+from services import submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,generate_pdf_bytes,lookupforpdf
 from database import get_db_connection
 from datetime import datetime
+from fastapi.responses import StreamingResponse
+import io
 
 app = FastAPI()
 
@@ -172,10 +174,18 @@ async def print_table(
 	if stock_data is None or not stock_data:
 		raise HTTPException(status_code=404, detail="No stock data found for the specified parameters.")
 	
-	pdf_path = generate_pdf(store_name,date,action,stock_data)
+	# pdf_path = generate_pdf(store_name,date,action,stock_data)
 
-	return FileResponse(
-		path = pdf_path,
-		filename = f"{store_name}_{formatted_date}_{action}_stock.pdf",
-		media_type='application/pdf'
+	# return FileResponse(
+	# 	path = pdf_path,
+	# 	filename = f"{store_name}_{formatted_date}_{action}_stock.pdf",
+	# 	media_type='application/pdf'
+	# )
+
+	pdf_bytes = generate_pdf_bytes(brand_name,store_name, date, action, stock_data)
+
+	return StreamingResponse(
+			io.BytesIO(pdf_bytes),
+			media_type="application/pdf",
+			headers={"Content-Disposition": f"attachment; filename={store_name}_{formatted_date}_{action}_stock.pdf"}
 	)

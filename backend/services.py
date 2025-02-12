@@ -205,25 +205,25 @@ def lookupforpdf(store_name : str, date : str, action : str, connection):
 
 
 #pdf
+import io
 from reportlab.lib.pagesizes import letter, landscape
 
-def generate_pdf(store_name: str, date: str, action: str, stock_data: list) -> str:
+def generate_pdf_bytes(brand_name: str ,store_name: str, date: str, action: str, stock_data: list) -> bytes:
     date_obj = datetime.strptime(date, "%Y-%m-%d")
     formatted_date = date_obj.strftime("%d_%b_%Y")
-    
-    file_name = f"{store_name.capitalize()}_{formatted_date}_{action.capitalize()}_Stock.pdf"
-    file_path = f"../../pdfs/{file_name}"
 
     margin_top = 36
     margin_bottom = 36
     margin_left = 36
     margin_right = 36
 
-    page_width,page_height = landscape(letter)
+    page_width, page_height = landscape(letter)
     available_width = page_width - margin_left - margin_right
 
+    buffer = io.BytesIO()  # Create an in-memory buffer
+
     pdf = SimpleDocTemplate(
-        file_path, 
+        buffer,
         pagesize=landscape(letter),
         rightMargin=margin_right,
         leftMargin=margin_left,
@@ -250,8 +250,8 @@ def generate_pdf(store_name: str, date: str, action: str, stock_data: list) -> s
         spaceAfter=20,
     )
 
-    main_heading = Paragraph("MOMSNFAIRIES", heading_style)
-    sub_heading = Paragraph(f"{store_name.capitalize()} | {formatted_date} | {action.capitalize()}_Stock", subheading_style)
+    main_heading = Paragraph(brand_name.capitalize(), heading_style)
+    sub_heading = Paragraph(f"{store_name.capitalize()} | {formatted_date} | {action.capitalize()} Stock", subheading_style)
 
     # Table data
     table_data = [["Item", "Design Code", "Price", "GST Rate", "HSNCODE", "TAXABLE", "TAX", "Quantity", "Size"]]
@@ -282,7 +282,8 @@ def generate_pdf(store_name: str, date: str, action: str, stock_data: list) -> s
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
     ]))
 
-    # Build the PDF
     pdf.build([main_heading, sub_heading, Spacer(1, 20), table])
-    
-    return file_path
+
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes  # Return the PDF content as bytes

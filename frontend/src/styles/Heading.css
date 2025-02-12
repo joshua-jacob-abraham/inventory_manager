@@ -1,10 +1,11 @@
 .brand{
   background-color: #FDFCDC;
   flex: 1.5;
-  font-size: 6rem;
+  font-size: 100px;
   color: lightcoral;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 132px;
+  cursor: pointer;
 }

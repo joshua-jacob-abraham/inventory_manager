@@ -12,7 +12,7 @@ function Home() {
 		<div className="dashboard">
 			<Heading name={'inventerogenesis'}/>
 			<div className="signupDash">
-				<Login setBrandName={setBrandName} />
+				<Login setBrandName={brandName} />
 			</div>
 		</div>
   );

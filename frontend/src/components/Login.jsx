@@ -34,7 +34,7 @@ const Login = () => {
             id="brandName"
             name="brandName"
             className="formDat"
-            onBlur={handleInputChange}
+            onChange={handleInputChange}
             autoComplete='off'
             required
           />

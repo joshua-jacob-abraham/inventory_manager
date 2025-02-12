@@ -139,4 +139,5 @@
   display: flex;
   justify-content: space-between;
   padding: 3px 12px;
+  align-items: center;
 }

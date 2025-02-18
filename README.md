@@ -13,9 +13,13 @@ The backend is built using FastAPI and needs to be compiled into an executable f
    ```sh
    cd backend
    ```
-2. Use `pyinstaller` to compile all backend files:
+### 2. Use PyInstaller to Compile All Backend Files
+
+   Ensure all dependencies are installed:
+   
    ```sh
-   pyinstaller --onefile main.py
+   pip install -r requirements.txt
+   pyinstaller --onefile --hidden-import=pandas --hidden-import=reportlab --hidden-import=PyPDF2 --hidden-import=mysql-connector-python --hidden-import=fpdf --hidden-import=pydantic --hidden-import=fastapi --hidden-import=uvicorn main.py
    ```
 3. After compilation, the built files will be located inside the `dist/` folder.
 4. Move the `dist/` folder into the `backend/` directory for easy access.

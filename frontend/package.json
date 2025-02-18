@@ -50,8 +50,12 @@
     ],
     "extraResources": [
       {
-        "from": "../backend",
-        "to": "backend",
+        "from": "../backend/dist/main.exe",
+        "to": "main.exe"
+      },
+      {
+        "from": "./electron/mysql",
+        "to": "mysql",
         "filter": ["**/*"]
       }
     ],

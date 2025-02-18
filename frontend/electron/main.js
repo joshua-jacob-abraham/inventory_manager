@@ -1,28 +1,67 @@
 import { app, BrowserWindow } from "electron";
 import { fileURLToPath, pathToFileURL } from "url";
 import path from "path";
-import { spawn } from "child_process";
+import { spawn, exec } from "child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let mainWindow;
+let mysqlProcess;
 let pythonProcess;
 
-function startFastAPI() {
-  const isProd = process.env.NODE_ENV === "production";
-  const backendPath = isProd
-    ? path.join(process.resourcesPath, "backend")
-    : path.join(__dirname, "../../backend");
+const testProcess = spawn('cmd.exe', ['/c', 'echo', 'Hello from Electron'], { shell: true });
 
-  const pythonCommand = process.platform === "win32" ? "python" : "python3";
+testProcess.stdout.on('data', (data) => {
+    console.log(`STDOUT: ${data}`);
+});
 
-  pythonProcess = spawn(
-    pythonCommand,
-    ["-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
+testProcess.on('error', (err) => {
+    console.error('CMD Error:', err);
+});
+
+function startMySQL() {
+  const isProd = app.isPackaged;
+  const mysqlPath = isProd
+    ? path.join(process.resourcesPath, "mysql", "bin", "mysqld.exe")
+    : path.join(__dirname, "/mysql/bin/mysqld.exe");
+
+  console.log(`Starting mysql with: "${mysqlPath}"`);
+
+  mysqlProcess = spawn(
+    mysqlPath,
+    ["--defaults-file=../my.ini", "--console"],
     {
-      cwd: backendPath,
+      cwd: path.dirname(mysqlPath),
+      // shell: true,
     }
   );
+
+  mysqlProcess.stdout.on("data", (data) => {
+    console.log(`MySQL: ${data}`);
+  });
+
+  mysqlProcess.stderr.on("data", (data) => {
+    console.error(`MySQL Error: ${data}`);
+  });
+
+  mysqlProcess.on("exit", (code) => {
+    console.log(`MySQL process exited with code ${code}`);
+  });
+}
+
+function startFastAPI() {
+  // const isProd = process.env.NODE_ENV === "production";
+  const isProd = app.isPackaged;
+  const backendPath = isProd
+    ? path.join(process.resourcesPath, "main.exe")
+    : path.join(__dirname, "../../backend/dist/main.exe");
+
+  console.log(`Starting FastAPI with: "${backendPath}"`);
+
+  pythonProcess = spawn(backendPath, [], {
+    cwd: path.dirname(backendPath),
+    // shell: true,
+  });
 
   pythonProcess.stdout.on("data", (data) => {
     console.log(`FastAPI: ${data}`);
@@ -30,6 +69,10 @@ function startFastAPI() {
 
   pythonProcess.stderr.on("data", (data) => {
     console.error(`FastAPI Error: ${data}`);
+  });
+
+  pythonProcess.on("close", (code) => {
+    console.log(`FastAPI process exited with code ${code}`);
   });
 }
 
@@ -52,15 +95,30 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  startFastAPI();
-  createWindow();
+  startMySQL();
+  setTimeout(() => {
+    startFastAPI();
+    setTimeout(() => createWindow(), 5000);
+  }, 5000);
 });
 
 app.on("window-all-closed", () => {
+  if (mysqlProcess) {
+    console.log("Stopping MySQL...");
+    exec(`taskkill /pid ${mysqlProcess.pid} /f /t`, (error, stdout, stderr) => {
+      if (error) console.error(`Error stopping MySQL: ${error}`);
+      if (stderr) console.error(`MySQL Shutdown Error: ${stderr}`);
+      if (stdout) console.log(`MySQL Shutdown: ${stdout}`);
+    });
+  }
+
   if (pythonProcess) {
-    process.platform === "win32"
-      ? spawn("taskkill", ["/pid", pythonProcess.pid, "/f", "/t"])
-      : pythonProcess.kill();
+    console.log("Stopping FastAPI...");
+    exec(`taskkill /pid ${pythonProcess.pid} /f /t`, (error, stdout, stderr) => {
+      if (error) console.error(`Error stopping FastAPI: ${error}`);
+      if (stderr) console.error(`FastAPI Shutdown Error: ${stderr}`);
+      if (stdout) console.log(`FastAPI Shutdown: ${stdout}`);
+    });
   }
 
   if (process.platform !== "darwin") {

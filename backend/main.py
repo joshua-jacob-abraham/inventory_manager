@@ -189,3 +189,9 @@ async def print_table(
 			media_type="application/pdf",
 			headers={"Content-Disposition": f"attachment; filename={store_name}_{formatted_date}_{action}_stock.pdf"}
 	)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    print("Running FastAPI server...")
+    uvicorn.run(app, host="127.0.0.1", port=8000)

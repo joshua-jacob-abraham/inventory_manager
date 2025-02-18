@@ -28,12 +28,13 @@ The MySQL database is stored inside the Electron app directory under the `fronte
 ### Directory Structure:
 ```
 frontend/
-│-- mysql/
-│   │-- bin/
-│   │   │-- data/
-│   │   │-- share/
-│   │   │-- lib/
-│   │-- my.ini
+|--electron/
+│   |-- mysql/
+│   |   │-- bin/
+│   |   │   │-- data/
+│   |   │   │-- share/
+│   |   │   │-- lib/
+│   |   │-- my.ini
 ```
 
 ### Steps:

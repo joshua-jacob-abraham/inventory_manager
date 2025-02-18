@@ -2,7 +2,7 @@ import "../styles/Return.css";
 import Heading from "../components/Heading.jsx";
 import CheckboxSize from "../components/CheckboxSize.jsx";
 import React, { useState, useContext } from "react";
-import SelectedItemsTable from "../components/SelectedReturn.jsx";
+import SelectedReturn from "../components/SelectedReturn.jsx";
 import { BrandNameContext } from "../contexts/BrandNameContext.jsx";
 import axios from "axios";
 
@@ -264,7 +264,7 @@ function ReturnStock() {
         </div>
 
         <div className="selectedItemsReturn">
-          <SelectedItemsTable data={fetchedReturnedDesigns} />
+          <SelectedReturn data={fetchedReturnedDesigns} />
         </div>
       </div>
     </div>

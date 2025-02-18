@@ -13,7 +13,7 @@ The backend is built using FastAPI and needs to be compiled into an executable f
    ```sh
    cd backend
    ```
-### 2. Use PyInstaller to Compile All Backend Files
+2. Use PyInstaller to Compile All Backend Files
 
    Ensure all dependencies are installed:
    

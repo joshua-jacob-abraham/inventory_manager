@@ -23,11 +23,8 @@ The backend, built using FastAPI, is compiled into an executable for deployment.
    ```
 3. Use **PyInstaller** to create an executable:
    ```sh
-   pyinstaller --onefile --hidden-import=pandas \
-               --hidden-import=reportlab --hidden-import=PyPDF2 \
-               --hidden-import=mysql-connector-python --hidden-import=fpdf \
-               --hidden-import=pydantic --hidden-import=fastapi \
-               --hidden-import=uvicorn main.py
+   pyinstaller --onefile --hidden-import=pandas --hidden-import=reportlab --hidden-import=PyPDF2 --hidden-import=mysql-connector-python --hidden-import=fpdf --hidden-import=pydantic --hidden-import=fastapi --hidden-import=uvicorn main.py
+
    ```
 4. After compilation, move the generated executable (`main.exe`) into the `backend/dist/` folder.
 

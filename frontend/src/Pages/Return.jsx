@@ -255,10 +255,10 @@ function ReturnStock() {
         </div>
 
         <div className="theactionReturn">
-          <button className="action actAdd" onClick={handleAddReturnItem}>
+          <button className="actionRet actReturn" onClick={handleAddReturnItem}>
             Add
           </button>
-          <button className="action submitReturn" onClick={handleSubmit}>
+          <button className="actionRet submitReturn" onClick={handleSubmit}>
             Submit
           </button>
         </div>

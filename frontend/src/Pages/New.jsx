@@ -304,7 +304,7 @@ function NewStock() {
               Add
             </button>
 
-            <button className="action" onClick={handleSubmit}>
+            <button className="action actSubmit" onClick={handleSubmit}>
               Submit
             </button>
           </div>

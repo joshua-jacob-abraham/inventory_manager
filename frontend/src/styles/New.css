@@ -97,15 +97,17 @@
   font-family: Georgia, 'Times New Roman', Times, serif;
   color: lightcoral;
   border: none;
-  border-radius: 5px;
   background-color: #FDFCDC;
   cursor: pointer;
-  border-bottom-right-radius: 15px;
 }
 
 .actAdd{
-  border-bottom-right-radius: 5px;
   margin-right: 6px;
+  border-bottom-left-radius: 10px;
+}
+
+.actSubmit{
+  border-bottom-right-radius: 15px;
 }
 
 .action:focus{
@@ -115,6 +117,6 @@
 .selectedItems{
   grid-column: 1 / span 3;
   grid-row: 3 / span 9;
-  min-height: 390px;
+  min-height: 392px;
   max-height: 390px;
 }

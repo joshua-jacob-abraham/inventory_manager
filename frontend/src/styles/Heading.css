@@ -9,4 +9,5 @@
   min-height: 142px;
   max-height: 142px;
   cursor: pointer;
+  user-select: none;
 }

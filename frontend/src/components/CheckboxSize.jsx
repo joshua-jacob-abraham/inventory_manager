@@ -45,7 +45,7 @@ const CheckboxSize = ({ id, label, onChange, reset = false  }) => {
 
       <input
         type="text"
-        placeholder="--"
+        placeholder="Quantity"
         className="qtyInReturn"
         value={quantity}
         onChange={(e) => setQuantity(e.target.value)}

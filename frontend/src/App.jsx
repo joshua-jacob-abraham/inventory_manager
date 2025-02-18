@@ -12,7 +12,7 @@ function App() {
     <BrandNameProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Home/>} />
+          <Route path="/home" element={<Home/>} />
           <Route path="/dash" element={<Dash />} />
           <Route path="/add-new" element={<NewStock />} />
           <Route path="/add-returned" element={<ReturnStock />} />

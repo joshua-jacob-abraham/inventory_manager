@@ -6,9 +6,17 @@ function Heading({ name }) {
   const handleClick = () => {
     navigate("/dash");
   };
+
+  const handleDoubleClick = () => {
+    navigate("/home");
+  };
   return (
     <>
-      <div className="brand" onClick={handleClick}>
+      <div
+        className="brand"
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+      >
         {name}
       </div>
     </>

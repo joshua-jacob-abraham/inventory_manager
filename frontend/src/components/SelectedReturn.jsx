@@ -9,8 +9,7 @@ const SelectedItemsTable = ({ data }) => {
           <tr>
             <th>Code</th>
             <th>Size</th>
-            <th>Price</th>
-            <th>Qnty</th>
+            <th>Qty</th>
           </tr>
         </thead>
         <tbody>
@@ -18,7 +17,6 @@ const SelectedItemsTable = ({ data }) => {
             <tr key={item.design_code}>
               <td>{item.design_code}</td>
               <td>{item.size}</td>
-              <td>{item.price}</td>
               <td>{item.quantity}</td>
             </tr>
           ))}

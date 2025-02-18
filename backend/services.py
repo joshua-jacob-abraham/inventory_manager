@@ -53,23 +53,16 @@ def update_store(store_name : str, store_key : str, status : bool, connection):
             connection.commit()
     else:
         for returned_item in temp_stock_data[store_key]:
-            # if(returned_item.quantity == 1):
-            #     cursor.execute(
-            #         f"""
-            #         DELETE FROM {store_name} WHERE design_code = {stock_item.design_code}"""
-            #     )
-            #     connection.commit()
-            # else:
             cursor.execute(
                 f"""
-                UPDATE {store_name} SET qty = qty - {returned_item.quantity} WHERE design_code = %s""",(returned_item.design_code,)
+                UPDATE {store_name} 
+                SET qty = GREATEST(qty - %s, 0) 
+                WHERE design_code = %s""",
+                (returned_item.quantity, returned_item.design_code)
             )
             connection.commit()
 
-        cursor.execute(
-            f"""DELETE FROM {store_name} WHERE qty = 0"""
-        )
-
+        cursor.execute(f"""DELETE FROM {store_name} WHERE qty <= 0""")
         connection.commit()
     cursor.close()
 

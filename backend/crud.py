@@ -37,6 +37,6 @@ def insert_into_returned(cursor,table_name : str,store_key : str, returned_item 
     cursor.execute(
         f"""
         INSERT INTO {table_name} (item,design_code, sp_per_item, gst_rate, hsncode, taxable_amount_per_item, tax_amount_per_item, qty, size)
-        SELECT item,design_code, sp_per_item, gst_rate, hsncode, taxable_amount_per_item, tax_amount_per_item, qty, size
-        FROM {store_key} WHERE design_code = %s""",(returned_item.design_code,)
+        SELECT item,design_code, sp_per_item, gst_rate, hsncode, taxable_amount_per_item, tax_amount_per_item, %s, size
+        FROM {store_key} WHERE design_code = %s""",(returned_item.quantity, returned_item.design_code)
     )

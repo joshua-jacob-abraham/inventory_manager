@@ -1,97 +1,133 @@
 # Inventory Management App Setup Guide
 
 ## Overview
-This guide walks through the steps to set up and compile the backend, configure MySQL, and integrate everything into the Electron-based frontend.
+This guide walks through the steps to:
+1. Compile the backend into an executable.
+2. Set up MySQL for the application.
+3. Build and package the Electron-based frontend.
+4. Generate an installer for easy deployment.
 
 ---
 
 ## 1. Compile the Backend
-The backend is built using FastAPI and needs to be compiled into an executable for deployment.
+The backend, built using FastAPI, is compiled into an executable for deployment.
 
 ### Steps:
 1. Navigate to the backend directory:
    ```sh
    cd backend
    ```
-2. Use PyInstaller to Compile All Backend Files
-
-   Ensure all dependencies are installed:
-   
+2. Install dependencies:
    ```sh
    pip install -r requirements.txt
-   pyinstaller --onefile --hidden-import=pandas --hidden-import=reportlab --hidden-import=PyPDF2 --hidden-import=mysql-connector-python --hidden-import=fpdf --hidden-import=pydantic --hidden-import=fastapi --hidden-import=uvicorn main.py
    ```
-3. After compilation, the built files will be located inside the `dist/` folder.
-4. Move the `dist/` folder into the `backend/` directory for easy access.
+3. Use **PyInstaller** to create an executable:
+   ```sh
+   pyinstaller --onefile --hidden-import=pandas \
+               --hidden-import=reportlab --hidden-import=PyPDF2 \
+               --hidden-import=mysql-connector-python --hidden-import=fpdf \
+               --hidden-import=pydantic --hidden-import=fastapi \
+               --hidden-import=uvicorn main.py
+   ```
+4. After compilation, move the generated executable (`main.exe`) into the `backend/dist/` folder.
 
 ---
 
 ## 2. Set Up MySQL
-The MySQL database is stored inside the Electron app directory under the `frontend/` folder.
+The MySQL database is packaged inside the Electron app to ensure portability.
 
 ### Directory Structure:
 ```
 frontend/
-|--electron/
+|-- electron/
 │   |-- mysql/
-│   |   │-- bin/
-│   |   │   │-- data/
-│   |   │   │-- share/
-│   |   │   │-- lib/
-│   |   │-- my.ini
+│   │   │-- bin/
+│   │   │-- data/
+│   │   │-- share/
+│   │   │-- lib/
+│   │-- my.ini
 ```
 
 ### Steps:
-1. Download and extract the MySQL zip file.
-2. Place the extracted files inside `frontend/electron/mysql/`.
-3. Ensure the `bin/` directory contains `data/`, `share/`, and `lib/` folders.
-4. The `my.ini` configuration file is already provided in the `mysql/` directory.
+1. Download and extract MySQL.
+2. Move the extracted files to `frontend/electron/mysql/`.
+3. Ensure that the `bin/`, `data/`, `share/`, and `lib/` folders are present.
+4. The **my.ini** file is preconfigured inside the `mysql/` directory.
 
 ---
 
 ## 3. Initialize MySQL Server
-The MySQL server needs to be initialized before use.
+Before using MySQL, it needs to be initialized.
 
 ### Steps:
-1. Open a terminal and navigate to the MySQL `bin/` directory:
+1. Open a terminal and navigate to MySQL `bin/` directory:
    ```sh
    cd frontend/electron/mysql/bin
    ```
-2. Initialize the MySQL server **without a password**:
+2. Initialize MySQL **without a password**:
    ```sh
    mysqld --initialize-insecure
    ```
-   - This starts MySQL without a root password.
-3. (Optional) If your backend requires a password, set it later using:
+3. (Optional) If a password is required, set it manually:
    ```sh
    mysqladmin -u root password "your_password"
    ```
 
 ---
 
-## 4. Running the Application
-Once MySQL is set up and the backend is compiled, you can launch the app:
+## 4. Build and Package the Application
 
-1. Start the MySQL server:
+### Step 1: Build the Frontend
+Run the following command in the **frontend** directory:
+```sh
+npm run build
+```
+This compiles the React frontend and stores the output in the `dist/` folder.
+
+---
+
+### Step 2: Package the Electron App
+Run:
+```sh
+npm run electron:build
+```
+This does two things:
+1. **Compiles the frontend** (`vite build`).
+2. **Uses `electron-builder`** to create an installer.
+
+After this step, the **installer** will be available in the `frontend/dist_electron/` folder.
+
+---
+
+## 5. Running the Application in Development Mode
+
+### Option 1: Start the App Manually
+1. **Start MySQL**:
    ```sh
+   cd frontend/electron/mysql/bin
    mysqld --console
    ```
-2. Run the backend executable:
+2. **Run the Backend**:
    ```sh
    cd backend/dist
    ./main.exe
    ```
-3. Start the Electron app:
+3. **Start the Electron App**:
    ```sh
    cd frontend
-   npm start 
+   npm run electron:dev
    ```
+
+### Option 2: Start Everything Automatically
+If you want everything to start together, modify your scripts or use a batch script to run all these commands in sequence.
+
 ---
 
-## Notes
-- Ensure MySQL is running before launching the backend and frontend.
-- If you face permission issues, try running commands as an administrator.
-- Use npm run <script> if a different command is set in package.json scripts.
+## 6. Notes
+- Ensure **MySQL** is running before launching the backend and frontend.
+- The Electron app automatically includes the **MySQL server** and **backend** when packaged, making installation seamless.
+- Run commands as an **administrator** if permission issues occur.
+
 ---
 
 Now you're all set! 🚀

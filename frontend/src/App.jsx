@@ -6,10 +6,13 @@ import ReturnStock from './Pages/Return.jsx';
 import ViewStock from './Pages/View.jsx';
 import Home from './Pages/Home.jsx';
 import { BrandNameProvider } from './contexts/BrandNameContext.jsx';
+import TitleBar from './components/TitleBar.jsx';
 
 function App() {
   return (
     <BrandNameProvider>
+      <TitleBar/>
+
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />

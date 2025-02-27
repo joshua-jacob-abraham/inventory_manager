@@ -22,6 +22,15 @@ function ReturnStock() {
   });
 
   const [resetCheck, setReset] = useState(false);
+  const [isSalesMode, setSalesMode] = useState(false);
+
+  const handleSalesModeToggle = () => {
+    setSalesMode((prevMode) => {
+      const newMode = !prevMode;
+      console.log(`Toggled Sales Mode: ${newMode}`);
+      return newMode;
+    });
+  };
 
   const handleCheckboxChange = (id, values) => {
     const size = parseInt(id, 10);
@@ -50,7 +59,7 @@ function ReturnStock() {
     });
   };
 
-  const handleAddReturnItem = async () => {
+  const handleAddItem = async () => {
     console.log(data.returnItems);
     console.log(data.storeName);
     console.log(data.designCode);
@@ -84,7 +93,10 @@ function ReturnStock() {
     }
 
     for (let item of validReturnItems) {
-      const completeDesignCode = `${data.designCode}${item.size}`;
+      const completeDesignCode =
+        item.size == 12
+          ? `${data.designCode}R`
+          : `${data.designCode}${item.size}`;
       const payload = {
         design_code: completeDesignCode,
         size: item.size,
@@ -93,17 +105,17 @@ function ReturnStock() {
 
       console.log(payload);
 
+      const url = isSalesMode
+        ? "http://localhost:8000/add/sales"
+        : "http://localhost:8000/add/return";
+
       try {
-        const response = await axios.post(
-          "http://localhost:8000/add/return",
-          payload,
-          {
-            params: {
-              store_name: data.storeName,
-              date: data.date,
-            },
-          }
-        );
+        const response = await axios.post(url, payload, {
+          params: {
+            store_name: data.storeName,
+            date: data.date,
+          },
+        });
 
         const { store_key, current_designs } = response.data;
 
@@ -111,7 +123,7 @@ function ReturnStock() {
         updatedDesigns = current_designs;
       } catch (error) {
         console.error(
-          "Error adding return item:",
+          `Error adding ${isSalesMode ? "sales" : "return"} item:`,
           error.response?.data || error.message
         );
       }
@@ -158,7 +170,7 @@ function ReturnStock() {
       return;
     }
 
-    const action = "return";
+    const action = isSalesMode ? "sales" : "return";
     let flag = 1;
     try {
       const response = await axios.post(
@@ -247,7 +259,7 @@ function ReturnStock() {
             <CheckboxSize
               key={size}
               id={size}
-              label={`${size}"`}
+              label={size == 12 ? `R` : `${size}"`}
               reset={resetCheck}
               onChange={handleCheckboxChange}
             />
@@ -255,9 +267,17 @@ function ReturnStock() {
         </div>
 
         <div className="theactionReturn">
-          <button className="actionRet actReturn" onClick={handleAddReturnItem}>
+          <button className="actionRet actReturn" onClick={handleAddItem}>
             Add
           </button>
+
+          <button
+            className="actionRet actSales"
+            onClick={handleSalesModeToggle}
+          >
+            {isSalesMode ? "Sales" : "Return"}
+          </button>
+
           <button className="actionRet submitReturn" onClick={handleSubmit}>
             Submit
           </button>

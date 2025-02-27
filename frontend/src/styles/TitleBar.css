@@ -1,0 +1,43 @@
+.custom-titlebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 28px;
+  background-color: lightcoral; 
+  color: #FDFCDC;
+  padding: 2px 10px;
+  padding-right: 5px;
+  font-family: Arial, sans-serif;
+  user-select: none;
+  -webkit-app-region: drag;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+}
+
+.title{
+  font-size: 18px;
+  font-family: serif;
+}
+
+.window-controls {
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+
+.window-controls button {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.window-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.minimize{
+ margin-top: -12px;
+}

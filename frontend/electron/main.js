@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { fileURLToPath, pathToFileURL } from "url";
 import path from "path";
 import { spawn, exec } from "child_process";
@@ -9,14 +9,16 @@ let mainWindow;
 let mysqlProcess;
 let pythonProcess;
 
-const testProcess = spawn('cmd.exe', ['/c', 'echo', 'Hello from Electron'], { shell: true });
-
-testProcess.stdout.on('data', (data) => {
-    console.log(`STDOUT: ${data}`);
+const testProcess = spawn("cmd.exe", ["/c", "echo", "Hello from Electron"], {
+  shell: true,
 });
 
-testProcess.on('error', (err) => {
-    console.error('CMD Error:', err);
+testProcess.stdout.on("data", (data) => {
+  console.log(`STDOUT: ${data}`);
+});
+
+testProcess.on("error", (err) => {
+  console.error("CMD Error:", err);
 });
 
 function startMySQL() {
@@ -27,14 +29,10 @@ function startMySQL() {
 
   console.log(`Starting mysql with: "${mysqlPath}"`);
 
-  mysqlProcess = spawn(
-    mysqlPath,
-    ["--defaults-file=../my.ini", "--console"],
-    {
-      cwd: path.dirname(mysqlPath),
-      // shell: true,
-    }
-  );
+  mysqlProcess = spawn(mysqlPath, ["--defaults-file=../my.ini", "--console"], {
+    cwd: path.dirname(mysqlPath),
+    // shell: true,
+  });
 
   mysqlProcess.stdout.on("data", (data) => {
     console.log(`MySQL: ${data}`);
@@ -80,18 +78,56 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    frame: false,
+    titleBarStyle: "hidden",
     icon: __dirname + "/app_icon.ico",
     webPreferences: {
       nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
     },
     autoHideMenuBar: true,
   });
 
-  const startUrl = pathToFileURL(
-    path.join(__dirname, "..", "dist", "index.html")
-  ).href;
+  const isProd = app.isPackaged;
+
+  const startUrl = isProd
+    ? pathToFileURL(path.join(__dirname, "..", "dist", "index.html")).href
+    : "http://localhost:5173";
+
   mainWindow.loadURL(startUrl);
+
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.control && input.shift && input.key.toLowerCase() === "i") {
+      event.preventDefault();
+    }
+    if (input.key === "F12") {
+      event.preventDefault();
+    }
+  });
+
+  mainWindow.webContents.on("context-menu", (event) => {
+    event.preventDefault(); // Disable right-click menu
+  });
+
+  ipcMain.on("window:minimize", () => {
+    console.log("Minimize command received");
+    mainWindow.minimize();
+  });
+
+  ipcMain.on("window:maximize", () => {
+    console.log("Maximize/restore command received");
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  });
+
+  ipcMain.on("window:close", () => {
+    console.log("Close command received");
+    mainWindow.close();
+  });
 }
 
 app.whenReady().then(() => {
@@ -114,11 +150,14 @@ app.on("window-all-closed", () => {
 
   if (pythonProcess) {
     console.log("Stopping FastAPI...");
-    exec(`taskkill /pid ${pythonProcess.pid} /f /t`, (error, stdout, stderr) => {
-      if (error) console.error(`Error stopping FastAPI: ${error}`);
-      if (stderr) console.error(`FastAPI Shutdown Error: ${stderr}`);
-      if (stdout) console.log(`FastAPI Shutdown: ${stdout}`);
-    });
+    exec(
+      `taskkill /pid ${pythonProcess.pid} /f /t`,
+      (error, stdout, stderr) => {
+        if (error) console.error(`Error stopping FastAPI: ${error}`);
+        if (stderr) console.error(`FastAPI Shutdown Error: ${stderr}`);
+        if (stdout) console.log(`FastAPI Shutdown: ${stdout}`);
+      }
+    );
   }
 
   if (process.platform !== "darwin") {

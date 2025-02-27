@@ -112,7 +112,7 @@ function ViewStock() {
         />
         <input
           type="text"
-          placeholder="new or return"
+          placeholder="new or return or sales"
           className="details act"
           disabled={isDisabled}
           value={action}

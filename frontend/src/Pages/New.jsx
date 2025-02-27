@@ -115,7 +115,10 @@ function NewStock() {
     }
 
     for (let item of validStockItems) {
-      const completeDesignCode = `${data.designCode}${item.size}`;
+      const completeDesignCode =
+        item.size == 12
+          ? `${data.designCode}R`
+          : `${data.designCode}${item.size}`;
       const payload = {
         item: data.item,
         design_code: completeDesignCode,
@@ -293,7 +296,7 @@ function NewStock() {
             <Checkbox
               key={size}
               id={size}
-              label={`${size}"`}
+              label={size == 12 ? `R` : `${size}"`}
               reset={resetCheck}
               onChange={handleCheckboxChange}
             />

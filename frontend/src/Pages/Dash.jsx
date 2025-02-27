@@ -15,7 +15,7 @@ function Dash() {
 			<Heading name={brandName}/>
 			<div className="accessibility">
 				<button className="thebutton new" onClick={()=> navigate("/add-new")}>Add New Stock</button>
-				<button className="thebutton return" onClick={()=> navigate("/add-returned")}>Add Stock Returned</button>
+				<button className="thebutton return" onClick={()=> navigate("/add-returned")}>Add Return/Sales</button>
 				<button className="thebutton view" onClick={()=> navigate("/view")}>View Saved Stock</button>
 			</div>
 		</div>

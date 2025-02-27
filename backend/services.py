@@ -92,7 +92,9 @@ def lookup(store_name : str, date : str, action : str, connection):
     if action == "new":
         the_table = f"{store_name}_{formatted_date}_new_stock"
     elif action == "return":
-        the_table = f"{store_name}_{formatted_date}_return_stock"    
+        the_table = f"{store_name}_{formatted_date}_return_stock"  
+    elif action == "sales":
+        the_table = f"{store_name}_{formatted_date}_sales_stock"
 
     try:
         cursor.execute(f"""SELECT 
@@ -132,6 +134,25 @@ def submit_returned_stock(store_name : str, store_key: str, table_name: str, dat
     new_store_key = f"{store_name}"
     for returned_item in temp_stock_data[store_key]:
         insert_into_returned(cursor, table_name, new_store_key, returned_item)
+
+    connection.commit()
+    cursor.close()
+    
+    update_store(store_name,store_key,False,connection)
+    
+    del temp_stock_data[store_key]
+
+#submit sales
+def submit_sales_stock(store_name : str, store_key: str, table_name: str, date : str, connection):
+    if store_key not in temp_stock_data or not temp_stock_data[store_key]:
+        raise ValueError("No designs to submit.")
+
+    cursor = connection.cursor()
+
+    create_table(cursor, table_name)
+    new_store_key = f"{store_name}"
+    for sales_item in temp_stock_data[store_key]:
+        insert_into_returned(cursor, table_name, new_store_key, sales_item)
 
     connection.commit()
     cursor.close()

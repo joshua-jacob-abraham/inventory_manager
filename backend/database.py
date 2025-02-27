@@ -8,7 +8,8 @@ def get_db_connection(
 		connection = ms.connect(
 			host = "127.0.0.1",
 			user = 'root',
-			password = 'Lepaku@2027')
+			password = 'Lepaku@2027',
+			port=3307 )
 		
 		cursor = connection.cursor()
 

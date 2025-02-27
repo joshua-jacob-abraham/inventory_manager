@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 import mysql.connector as ms
 from fastapi.middleware.cors import CORSMiddleware
 from models import StockItem,ReturnedItem
-from services import submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,generate_pdf_bytes,lookupforpdf
+from services import submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,generate_pdf_bytes,lookupforpdf,submit_sales_stock
 from database import get_db_connection
 from datetime import datetime
 from fastapi.responses import StreamingResponse
@@ -54,6 +54,30 @@ async def add_returned_item(
 	formatted_date = date_obj.strftime("%d_%b_%Y")
 	
 	store_key = f"{store_name}_{formatted_date}_return_stock"
+
+	try:
+		temp_data = add_design_temp_return(store_key,returned_item)
+		return {
+			"message" : "Stock item added to returned list",
+			"store_key" : store_key,
+			"current_designs" : temp_data
+		}
+
+	except Exception as e:
+		raise HTTPException(status_code=400, detail=str(e))
+
+#sales
+@app.post("/add/sales")
+async def add_sales_item(
+	returned_item : ReturnedItem,
+	store_name : str = Query(...), 
+	date : str = Query(...)
+	):
+	
+	date_obj = datetime.strptime(date, "%Y-%m-%d")
+	formatted_date = date_obj.strftime("%d_%b_%Y")
+	
+	store_key = f"{store_name}_{formatted_date}_sales_stock"
 
 	try:
 		temp_data = add_design_temp_return(store_key,returned_item)
@@ -131,6 +155,10 @@ async def submition_handler(
 			store_key = f"{store_name}_{formatted_date}_return_stock"
 			table_name = f"{store_name}_{formatted_date}_return_stock"
 			submit_returned_stock(store_name, store_key,table_name,formatted_date,connection)
+		elif action == "sales":
+			store_key = f"{store_name}_{formatted_date}_sales_stock"
+			table_name = f"{store_name}_{formatted_date}_sales_stock"
+			submit_sales_stock(store_name, store_key,table_name,formatted_date,connection)
 
 		connection.close()
 

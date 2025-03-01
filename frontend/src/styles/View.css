@@ -61,7 +61,7 @@
   background-color: rgba(241, 240, 240, 0.977);
 }
 
-.get, .printView{
+.get, .printPDF, .printExcel{
   font-size: 2em;
   font-family: Georgia, 'Times New Roman', Times, serif;
   color: lightcoral;
@@ -71,7 +71,11 @@
   cursor: pointer;
 }
 
-.printView:disabled{
+.printPDF:disabled{
+  background-color: #ebeacd;
+}
+
+.printExcel:disabled{
   background-color: #ebeacd;
 }
 
@@ -81,8 +85,14 @@
   font-size: 20px;
 }
 
-.printView{
-  grid-column: 4 / span 2;
+.printPDF{
+  grid-column: 4 / span 1;
+  grid-row: 2;
+  font-size: 20px;
+}
+
+.printExcel{
+  grid-column: 5 / span 1;
   grid-row: 2;
   font-size: 20px;
 }

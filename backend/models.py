@@ -1,13 +1,12 @@
 from pydantic import BaseModel
-from typing import Optional
-from datetime import date
+from typing import Union, Optional
 
 #define schemas for data transfer(how data should be structured.)
 
 class StockItem(BaseModel):
     item : str
     design_code : str
-    size : int
+    size : Union[int, str]
     price : float
     quantity : int
     gst_applicable : bool
@@ -43,5 +42,5 @@ class StockItem(BaseModel):
 
 class ReturnedItem(BaseModel):
     design_code : str
-    size : int
+    size : Union[int, str]
     quantity : int

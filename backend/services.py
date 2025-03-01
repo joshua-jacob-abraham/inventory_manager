@@ -28,7 +28,11 @@ def submit_new_stock(store_name : str, store_key: str, table_name: str, connecti
 
     cursor = connection.cursor()
 
-    create_table(cursor, table_name)
+    cursor.execute(f"SHOW TABLES LIKE '{table_name}'")
+    table_exists = cursor.fetchone()
+
+    if not table_exists:
+        create_table(cursor, table_name)
 
     for stock_item in temp_stock_data[store_key]:
         insert_item(cursor, table_name, stock_item)
@@ -130,7 +134,12 @@ def submit_returned_stock(store_name : str, store_key: str, table_name: str, dat
 
     cursor = connection.cursor()
 
-    create_table(cursor, table_name)
+    cursor.execute(f"SHOW TABLES LIKE '{table_name}'")
+    table_exists = cursor.fetchone()
+
+    if not table_exists:
+        create_table(cursor, table_name)
+        
     new_store_key = f"{store_name}"
     for returned_item in temp_stock_data[store_key]:
         insert_into_returned(cursor, table_name, new_store_key, returned_item)
@@ -149,7 +158,12 @@ def submit_sales_stock(store_name : str, store_key: str, table_name: str, date :
 
     cursor = connection.cursor()
 
-    create_table(cursor, table_name)
+    cursor.execute(f"SHOW TABLES LIKE '{table_name}'")
+    table_exists = cursor.fetchone()
+
+    if not table_exists:
+        create_table(cursor, table_name)
+        
     new_store_key = f"{store_name}"
     for sales_item in temp_stock_data[store_key]:
         insert_into_returned(cursor, table_name, new_store_key, sales_item)
@@ -182,8 +196,8 @@ def remove_from_temp(store_key : str, code : str):
     return temp_stock_data[store_key]    
 
 
-#lookupforpdf
-def lookupforpdf(store_name : str, date : str, action : str, connection):
+#lookupforprint
+def lookupforprint(store_name : str, date : str, action : str, connection):
     cursor = connection.cursor(dictionary = True)
     
     date_obj = datetime.strptime(date,"%Y-%m-%d")
@@ -268,10 +282,11 @@ def generate_pdf_bytes(brand_name: str ,store_name: str, date: str, action: str,
     sub_heading = Paragraph(f"{store_name.capitalize()} | {formatted_date} | {action.capitalize()} Stock", subheading_style)
 
     # Table data
-    table_data = [["Item", "Design Code", "Price", "GST Rate", "HSNCODE", "TAXABLE", "TAX", "Quantity", "Size"]]
+    table_data = [["S.No", "Item", "Design Code", "Price", "GST Rate", "HSNCODE", "TAXABLE", "TAX", "Quantity", "Size"]]
 
-    for item in stock_data:
+    for index, item in enumerate(stock_data, start=1):
         table_data.append([
+            str(index),
             item["item"],
             item["design_code"],
             f"{item['sp_per_item']:.2f}",
@@ -288,8 +303,8 @@ def generate_pdf_bytes(brand_name: str ,store_name: str, date: str, action: str,
 
     table = Table(table_data, colWidths=colWidths)
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.aliceblue),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),

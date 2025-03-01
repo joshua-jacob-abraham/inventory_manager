@@ -6,3 +6,4 @@ fpdf
 pydantic
 fastapi
 uvicorn
+openpyxl

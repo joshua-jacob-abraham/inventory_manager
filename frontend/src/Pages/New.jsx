@@ -1,4 +1,5 @@
 import "../styles/New.css";
+import { useNavigate } from "react-router-dom";
 import React, { useState, useContext } from "react";
 import Heading from "../components/Heading.jsx";
 import Checkbox from "../components/Checkbox.jsx";
@@ -6,13 +7,29 @@ import SelectedItemsTable from "../components/Selected.jsx";
 import axios from "axios";
 import CheckGST from "../components/CheckGST.jsx";
 import { BrandNameContext } from "../contexts/BrandNameContext.jsx";
+import Loading from "../components/Loading.jsx";
 
 let fetchedDesigns = [];
 
 function NewStock() {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (!data.storeName.trim()) {
+      navigate("/dash");
+    }
+  };
+
+  const handleDoubleClick = () => {
+    if (!data.storeName.trim()) {
+      navigate("/home");
+    }
+  };
+
   const { brandName } = useContext(BrandNameContext);
 
   const sizes = ["12", "14", "16", "18", "20", "22", "24", "26", "28", "30"];
+  const [loading, setLoading] = useState(false);
 
   const [data, setData] = useState({
     storeName: "",
@@ -119,10 +136,15 @@ function NewStock() {
         item.size == 12
           ? `${data.designCode}R`
           : `${data.designCode}${item.size}`;
+
+      const capitalizedItem =
+        data.item.charAt(0).toUpperCase() + data.item.slice(1).toLowerCase();
+      const upperDesignCode = completeDesignCode.toUpperCase();
+
       const payload = {
-        item: data.item,
-        design_code: completeDesignCode,
-        size: item.size,
+        item: capitalizedItem,
+        design_code: upperDesignCode,
+        size: item.size == 12 ? "R" : item.size,
         price: parseFloat(item.price),
         quantity: parseInt(item.quantity, 10),
         gst_applicable: item.gst_applicable || false,
@@ -135,6 +157,7 @@ function NewStock() {
       console.log(payload);
 
       try {
+        setLoading(true);
         const response = await axios.post(
           "http://localhost:8000/add/new",
           payload,
@@ -155,10 +178,13 @@ function NewStock() {
           "Error adding stock item:",
           error.response?.data || error.message
         );
+      } finally {
+        setLoading(false);
       }
     }
 
     try {
+      setLoading(true);
       const response = await axios.get(
         `http://localhost:8000/view/${newStoreKey}`
       );
@@ -168,6 +194,8 @@ function NewStock() {
         "Error fetching stock designs:",
         error.response?.data || error.message
       );
+    } finally {
+      setLoading(false);
     }
 
     setData({
@@ -203,6 +231,7 @@ function NewStock() {
     const action = "new";
 
     try {
+      setLoading(true);
       const response = await axios.post(
         `http://localhost:8000/submit/${brandName}/${action}`,
         null,
@@ -222,6 +251,8 @@ function NewStock() {
         error.response?.data || error.message
       );
       alert("Failed to submit stock details.");
+    } finally {
+      setLoading(false);
     }
 
     setData({
@@ -252,7 +283,13 @@ function NewStock() {
 
   return (
     <div className="dashboard">
-      <Heading name={brandName} />
+      <Heading
+        name={brandName}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+      />
+
+      {loading && <Loading />}
 
       <div className="newstock">
         <input

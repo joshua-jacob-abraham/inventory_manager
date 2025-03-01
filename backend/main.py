@@ -3,11 +3,13 @@ from fastapi.responses import FileResponse
 import mysql.connector as ms
 from fastapi.middleware.cors import CORSMiddleware
 from models import StockItem,ReturnedItem
-from services import submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,generate_pdf_bytes,lookupforpdf,submit_sales_stock
+from services import submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,generate_pdf_bytes,lookupforprint,submit_sales_stock
 from database import get_db_connection
 from datetime import datetime
+from openpyxl.styles import Font, Alignment
 from fastapi.responses import StreamingResponse
 import io
+import pandas as pd
 
 app = FastAPI()
 
@@ -184,8 +186,8 @@ async def remove(
 	}
 
 #print table
-@app.post("/print/{brand_name}")
-async def print_table(
+@app.post("/printPDF/{brand_name}")
+async def print_pdf(
 	brand_name : str,
 	store_name : str = Query(...),
 	date : str = Query(...),
@@ -198,17 +200,9 @@ async def print_table(
 	connection = get_db_connection(brand_name)
 	
 
-	stock_data = lookupforpdf(store_name,date,action,connection)
+	stock_data = lookupforprint(store_name,date,action,connection)
 	if stock_data is None or not stock_data:
 		raise HTTPException(status_code=404, detail="No stock data found for the specified parameters.")
-	
-	# pdf_path = generate_pdf(store_name,date,action,stock_data)
-
-	# return FileResponse(
-	# 	path = pdf_path,
-	# 	filename = f"{store_name}_{formatted_date}_{action}_stock.pdf",
-	# 	media_type='application/pdf'
-	# )
 
 	pdf_bytes = generate_pdf_bytes(brand_name,store_name, date, action, stock_data)
 
@@ -216,6 +210,67 @@ async def print_table(
 			io.BytesIO(pdf_bytes),
 			media_type="application/pdf",
 			headers={"Content-Disposition": f"attachment; filename={store_name}_{formatted_date}_{action}_stock.pdf"}
+	)
+
+#print excel
+@app.post("/printExcel/{brand_name}")
+async def print_table_excel(
+	brand_name: str,
+	store_name: str = Query(...),
+	date: str = Query(...),
+	action: str = Query(...)
+):
+	date_obj = datetime.strptime(date, "%Y-%m-%d")
+	formatted_date = date_obj.strftime("%d_%b_%Y")
+
+	connection = get_db_connection(brand_name)
+
+	stock_data = lookupforprint(store_name, date, action, connection)
+
+	if stock_data is None or not stock_data:
+			raise HTTPException(status_code=404, detail="No stock data found for the specified parameters.")
+
+	df = pd.DataFrame(stock_data)
+	df.index = range(1, len(df) + 1)
+
+	excel_bytes_io = io.BytesIO()
+
+	with pd.ExcelWriter(excel_bytes_io, engine='openpyxl') as writer:
+			sheet_name = "Stock Data"
+			df.to_excel(writer, index=True, startrow=3, sheet_name=sheet_name, index_label="S.No")
+
+			workbook = writer.book
+			worksheet = writer.sheets[sheet_name]
+
+			worksheet.merge_cells("A1:H1")
+			header_cell = worksheet["A1"]
+			header_cell.value = f"Brand: {brand_name} | Store: {store_name} | Date: {date} | {action} stocks"
+			header_cell.font = Font(bold=True, size=14, name="Times New Roman")
+			header_cell.alignment = Alignment(horizontal="center", vertical="center")
+
+			column_widths = {
+					"A": 12,  # S.No
+					"B": 12,  # item
+					"C": 18,  # design_code
+					"D": 12,  # size
+					"E": 14,  # sp_per_item
+					"F": 10,  # qty
+					"G": 11,  # gst_rate
+					"H": 18,  # taxable_amount
+					"I": 18   # tax_amount
+			}
+
+			for col, width in column_widths.items():
+					worksheet.column_dimensions[col].width = width
+	
+	excel_bytes_io.seek(0)
+
+	return StreamingResponse(
+			excel_bytes_io,
+			media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+			headers={
+					"Content-Disposition": f"attachment; filename={store_name}_{formatted_date}_{action}_stock.xlsx"
+			}
 	)
 
 

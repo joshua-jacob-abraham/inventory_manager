@@ -5,12 +5,29 @@ import React, { useState, useContext } from "react";
 import SelectedReturn from "../components/SelectedReturn.jsx";
 import { BrandNameContext } from "../contexts/BrandNameContext.jsx";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import Loading from "../components/Loading.jsx";
 
 let fetchedReturnedDesigns = [];
 
 function ReturnStock() {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (!data.storeName.trim()) {
+      navigate("/dash");
+    }
+  };
+
+  const handleDoubleClick = () => {
+    if (!data.storeName.trim()) {
+      navigate("/home");
+    }
+  };
+
   const { brandName } = useContext(BrandNameContext);
   const sizes = ["12", "14", "16", "18", "20", "22", "24", "26", "28", "30"];
+  const [loading, setLoading] = useState(false);
 
   const [data, setData] = useState({
     storeName: "",
@@ -99,7 +116,7 @@ function ReturnStock() {
           : `${data.designCode}${item.size}`;
       const payload = {
         design_code: completeDesignCode,
-        size: item.size,
+        size: item.size == 12 ? "R" : item.size,
         quantity: parseInt(item.quantity, 10),
       };
 
@@ -110,6 +127,7 @@ function ReturnStock() {
         : "http://localhost:8000/add/return";
 
       try {
+        setLoading(true);
         const response = await axios.post(url, payload, {
           params: {
             store_name: data.storeName,
@@ -126,10 +144,13 @@ function ReturnStock() {
           `Error adding ${isSalesMode ? "sales" : "return"} item:`,
           error.response?.data || error.message
         );
+      } finally {
+        setLoading(false);
       }
     }
 
     try {
+      setLoading(true);
       const response = await axios.get(
         `http://localhost:8000/view/${newStoreKey}`
       );
@@ -140,6 +161,8 @@ function ReturnStock() {
         "Error fetching stock designs:",
         error.response?.data || error.message
       );
+    } finally {
+      setLoading(false);
     }
 
     setData({
@@ -173,6 +196,7 @@ function ReturnStock() {
     const action = isSalesMode ? "sales" : "return";
     let flag = 1;
     try {
+      setLoading(true);
       const response = await axios.post(
         `http://localhost:8000/submit/${brandName}/${action}`,
         null,
@@ -200,6 +224,8 @@ function ReturnStock() {
         alert("Failed to submit return details.");
         flag = 0;
       }
+    } finally {
+      setLoading(false);
     }
 
     if (flag == 1) {
@@ -230,7 +256,13 @@ function ReturnStock() {
 
   return (
     <div className="dashboard">
-      <Heading name={brandName} />
+      <Heading
+        name={brandName}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+      />
+
+      {loading && <Loading />}
 
       <div className="stock">
         <input

@@ -4,8 +4,9 @@
 This guide walks through the steps to:
 1. Compile the backend into an executable.
 2. Set up MySQL for the application.
-3. Build and package the Electron-based frontend.
-4. Generate an installer for easy deployment.
+3. Install Node.js dependencies
+4. Build and package the Electron-based frontend.
+5. Generate an installer for easy deployment.
 
 ---
 
@@ -31,17 +32,16 @@ The backend, built using FastAPI, is compiled into an executable for deployment.
 ---
 
 ## 2. Set Up MySQL
-The MySQL database is packaged inside the Electron app to ensure portability.
-
+The MySQL database is packaged inside the Electron app to ensure portability. 
 ### Directory Structure:
 ```
 frontend/
 |-- electron/
 │   |-- mysql/
 │   │   │-- bin/
-│   │   │-- data/
-│   │   │-- share/
-│   │   │-- lib/
+│   │       │-- data/
+│   │       │-- share/
+│   │       │-- lib/
 │   │-- my.ini
 ```
 
@@ -49,7 +49,8 @@ frontend/
 1. Download and extract MySQL.
 2. Move the extracted files to `frontend/electron/mysql/`.
 3. Ensure that the `bin/`, `data/`, `share/`, and `lib/` folders are present.
-4. The **my.ini** file is preconfigured inside the `mysql/` directory.
+4. The data, share and lib folders must be inside bin directory.
+5. The **my.ini** file is preconfigured inside the `mysql/` directory.
 
 ---
 
@@ -72,7 +73,15 @@ Before using MySQL, it needs to be initialized.
 
 ---
 
-## 4. Build and Package the Application
+## 4. Install npm dependencies
+
+Run the following command in the **frontend** directory:
+```sh
+npm install
+```
+This installs all required packages for the React + Electron frontend.
+
+## 5. Build and Package the Application
 
 ### Step 1: Build the Frontend
 Run the following command in the **frontend** directory:

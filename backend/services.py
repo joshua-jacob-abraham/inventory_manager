@@ -23,9 +23,7 @@ def ordinal(n):
     if 11 <= n % 100 <= 13:
         return f"{n}th"
     else:
-        return f"{n}{['th','st','nd','rd','th','th','th','th','th','th'][n % 10]}"
-    
-    
+        return f"{n}{['th','st','nd','rd','th','th','th','th','th','th'][n % 10]}"    
 
 def is_valid_name(name: str) -> bool:
     return bool(re.match(r'^[a-zA-Z0-9_]+$', name))
@@ -39,14 +37,22 @@ def reverse_table_name(name: str):
 def add_to_stores(store_name: str, connection):
     cursor = connection.cursor()
 
-    cursor.execute("SELECT store_name FROM stores WHERE store_name = %s", (store_name,))
-    result = cursor.fetchone()
+    try:
+        cursor.execute(
+            "SELECT store_name FROM stores WHERE store_name = %s",
+            (store_name,)
+        )
 
-    if not result:
-        cursor.execute("INSERT INTO stores (store_name) VALUES (%s)", (store_name,))
-        connection.commit()
+        result = cursor.fetchone()
 
-    cursor.close()        
+        if not result:
+            cursor.execute(
+                "INSERT INTO stores (store_name) VALUES (%s)",
+                (store_name,)
+            )
+
+    finally:
+        cursor.close()     
 
 def add_design_temp(store_key : str, stock_item : StockItem):
     if store_key not in temp_stock_data:
@@ -54,22 +60,6 @@ def add_design_temp(store_key : str, stock_item : StockItem):
     temp_stock_data[store_key].append(stock_item)
     return temp_stock_data[store_key]
 
-def set_custom_field_definitions(store_name:str, store_key : str, connection):
-    cursor = connection.cursor()
-    custom_fields_def = temp_stock_data[store_key][0].custom_fields.keys()
-    custom_fields_def = list(custom_fields_def)
-    
-    cursor.execute(
-        """
-        UPDATE stores
-        SET custom_field_definitions = %s
-        WHERE store_name = %s
-        """,
-        (json.dumps(custom_fields_def), store_name)
-    )
-
-    connection.commit()
-    cursor.close()
 
 def submit_new_stock(store_name : str, store_key: str, table_name: str, connection):
     store_name = make_valid_table_name(store_name)
@@ -79,111 +69,154 @@ def submit_new_stock(store_name : str, store_key: str, table_name: str, connecti
         raise ValueError("No designs to submit.")
 
     cursor = connection.cursor()
-    cursor.execute(f"SHOW TABLES LIKE '{table_name}'")
-    table_exists = cursor.fetchone()
 
-    if not table_exists:
-        create_table(cursor, table_name)
+    try:
+        cursor.execute(f"SHOW TABLES LIKE '{table_name}'")
+        table_exists = cursor.fetchone()
 
-    for stock_item in temp_stock_data[store_key]:
-        insert_item(cursor, table_name, stock_item)
+        if not table_exists:
+            create_table(cursor, table_name)
 
-    connection.commit()
-    cursor.close()
+        for stock_item in temp_stock_data[store_key]:
+            insert_item(cursor, table_name, stock_item)
 
-    update_store(store_name,store_key,True,connection)
-    update_dress_stock(store_name, temp_stock_data[store_key], connection, is_add=True)
-    
-    set_custom_field_definitions(store_name, store_key, connection)	
-    del temp_stock_data[store_key]
+        update_store(store_name,store_key,True,connection)
+        update_dress_stock(store_name, temp_stock_data[store_key], connection, is_add=True)
+
+    finally:
+        cursor.close()
 
 def update_dress_stock(store_name: str, stock_items: list, connection, is_add: bool):
     cursor = connection.cursor()
 
-    # Ensure store exists
-    cursor.execute("SELECT store_id FROM stores WHERE store_name = %s", (store_name,))
-    result = cursor.fetchone()
-    if result:
-        store_id = result[0]
-    else:
-        cursor.execute("INSERT INTO stores (store_name) VALUES (%s)", (store_name,))
-        connection.commit()
-        store_id = cursor.lastrowid
-
-    for item in stock_items:
-        # item must have: design_code, price, quantity
-
-        # Ensure design exists
-        cursor.execute(
-            "SELECT design_id FROM Dresses WHERE design_code = %s AND price = %s",
-            (item.design_code, item.price)
-        )
+    try:
+        # Ensure store exists
+        cursor.execute("SELECT store_id FROM stores WHERE store_name = %s", (store_name,))
         result = cursor.fetchone()
-
         if result:
-            design_id = result[0]
+            store_id = result[0]
         else:
+            cursor.execute("INSERT INTO stores (store_name) VALUES (%s)", (store_name,))
+            store_id = cursor.lastrowid
+
+        for item in stock_items:
+            # item must have: design_code, price, quantity
+
+            # Ensure design exists
             cursor.execute(
-                "INSERT INTO Dresses (design_code, price) VALUES (%s, %s)",
+                "SELECT design_id FROM Dresses WHERE design_code = %s AND price = %s",
                 (item.design_code, item.price)
             )
-            connection.commit()
-            design_id = cursor.lastrowid
+            result = cursor.fetchone()
 
-        # Check if stock already exists
-        cursor.execute(
-            "SELECT quantity FROM Dress_Stock WHERE design_id = %s AND store_id = %s",
-            (design_id, store_id)
-        )
-        result = cursor.fetchone()
-
-        if result:
-            existing_qty = result[0]
-            new_qty = existing_qty + item.quantity if is_add else max(existing_qty - item.quantity, 0)
-
-            cursor.execute(
-                "UPDATE Dress_Stock SET quantity = %s WHERE design_id = %s AND store_id = %s",
-                (new_qty, design_id, store_id)
-            )
-        else:
-            # Only insert if quantity is non-zero and it's an add operation
-            if is_add and item.quantity > 0:
+            if result:
+                design_id = result[0]
+            else:
                 cursor.execute(
-                    "INSERT INTO Dress_Stock (design_id, store_id, quantity) VALUES (%s, %s, %s)",
-                    (design_id, store_id, item.quantity)
+                    "INSERT INTO Dresses (design_code, price) VALUES (%s, %s)",
+                    (item.design_code, item.price)
                 )
+                design_id = cursor.lastrowid
 
-    connection.commit()
-    cursor.close()
+            # Check if stock already exists
+            cursor.execute(
+                "SELECT quantity FROM Dress_Stock WHERE design_id = %s AND store_id = %s",
+                (design_id, store_id)
+            )
+            result = cursor.fetchone()
 
+            if result:
+                existing_qty = result[0]
+                new_qty = existing_qty + item.quantity if is_add else max(existing_qty - item.quantity, 0)
+
+                cursor.execute(
+                    "UPDATE Dress_Stock SET quantity = %s WHERE design_id = %s AND store_id = %s",
+                    (new_qty, design_id, store_id)
+                )
+            else:
+                # Only insert if quantity is non-zero and it's an add operation
+                if is_add and item.quantity > 0:
+                    cursor.execute(
+                        "INSERT INTO Dress_Stock (design_id, store_id, quantity) VALUES (%s, %s, %s)",
+                        (design_id, store_id, item.quantity)
+                    )
+
+    finally:
+        cursor.close()
 
 #store name as table name
 #status 1 for new stock, 0 for returned and sales.
-def update_store(store_name : str, store_key : str, status : bool, connection):
+def update_store(store_name: str, store_key: str, status: bool, connection):
     store_name = make_valid_table_name(store_name)
 
     cursor = connection.cursor()
-    create_table(cursor,store_name)
-    connection.commit()
 
-    if(status):
-        for stock_item in temp_stock_data[store_key]:
-            insert_item(cursor,store_name,stock_item)
-            connection.commit()
-    else:
-        for returned_item in temp_stock_data[store_key]:
+    try:
+        create_table(cursor, store_name)
+
+        if status:
+            for stock_item in temp_stock_data[store_key]:
+
+                # Check if this design already exists in the store
+                cursor.execute(
+                    f"""
+                    SELECT qty
+                    FROM {store_name}
+                    WHERE design_code = %s
+                    """,
+                    (stock_item.design_code,)
+                )
+
+                result = cursor.fetchone()
+
+                if result:
+                    # Design already exists → increase quantity
+                    existing_qty = result[0]
+                    new_qty = existing_qty + stock_item.quantity
+
+                    cursor.execute(
+                        f"""
+                        UPDATE {store_name}
+                        SET qty = %s
+                        WHERE design_code = %s
+                        """,
+                        (
+                            new_qty,
+                            stock_item.design_code
+                        )
+                    )
+
+                else:
+                    # Design doesn't exist → insert new row
+                    insert_item(
+                        cursor,
+                        store_name,
+                        stock_item
+                    )
+
+        else:
+            for returned_item in temp_stock_data[store_key]:
+                cursor.execute(
+                    f"""
+                    UPDATE {store_name}
+                    SET qty = GREATEST(qty - %s, 0)
+                    WHERE design_code = %s
+                    """,
+                    (
+                        returned_item.quantity,
+                        returned_item.design_code
+                    )
+                )
+
             cursor.execute(
                 f"""
-                UPDATE {store_name} 
-                SET qty = GREATEST(qty - %s, 0) 
-                WHERE design_code = %s""",
-                (returned_item.quantity, returned_item.design_code)
+                DELETE FROM {store_name}
+                WHERE qty <= 0
+                """
             )
-            connection.commit()
 
-        cursor.execute(f"""DELETE FROM {store_name} WHERE qty <= 0""")
-        connection.commit()
-    cursor.close()
+    finally:
+        cursor.close()
 
 #view shelf
 def from_shelf(store_name : str,connection):
@@ -272,7 +305,8 @@ def lookup(store_name: str, date: str, action: str, connection):
             GST_RATE AS gst_rate, 
             TAXABLE_AMOUNT_PER_ITEM AS taxable_amount, 
             TAX_AMOUNT_PER_ITEM AS tax_amount,
-            CUSTOM_FIELDS AS custom_fields
+            CUSTOM_FIELDS AS custom_fields,
+            PER_SIZE_CUSTOM_FIELDS As per_size_custom_fields
             FROM {the_table};""")
         rows = cursor.fetchall()
 
@@ -281,6 +315,16 @@ def lookup(store_name: str, date: str, action: str, connection):
             if cf:
                 try:
                     parsed = json.loads(cf) if isinstance(cf, str) else cf
+                    if isinstance(parsed, dict):
+                        row.update(parsed)
+                except:
+                    pass
+
+        for row in rows:
+            pcf = row.pop("per_size_custom_fields", None)
+            if pcf:
+                try:
+                    parsed = json.loads(pcf) if isinstance(pcf, str) else pcf
                     if isinstance(parsed, dict):
                         row.update(parsed)
                 except:
@@ -316,6 +360,7 @@ def lookupRange(fromDate, toDate, store_name, action, connection):
 
     col_names = [desc[0] for desc in cursor.description]
     result = [dict(zip(col_names, row)) for row in rows]
+    cursor.close()
 
     return result        
 
@@ -436,7 +481,8 @@ def lookupforprint(store_name: str, date: str, action: str, connection):
             GST_RATE AS gst_rate, 
             TAXABLE_AMOUNT_PER_ITEM AS taxable_amount, 
             TAX_AMOUNT_PER_ITEM AS tax_amount,
-            CUSTOM_FIELDS AS custom_fields
+            CUSTOM_FIELDS AS custom_fields,
+            PER_SIZE_CUSTOM_FIELDS AS per_size_custom_fields
             FROM {the_table};""")
         return cursor.fetchall()
     except ms.errors.ProgrammingError as e:

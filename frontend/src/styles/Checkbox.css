@@ -173,3 +173,27 @@
 .item{
   min-width: 43px;
 }
+
+.perSizeFields {
+  display: flex;
+  gap: 10px;
+  max-width: 240px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+
+.perSizeAddField {
+  flex: 0 0 auto;
+  cursor: pointer;
+  text-align: center;
+  margin: 0;
+  border-style: dashed !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.perSizeAddField:hover {
+  background-color: #f5f5f5;
+  border-color: #777 !important;
+}

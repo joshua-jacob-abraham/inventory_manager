@@ -15,6 +15,7 @@ class StockItem(BaseModel):
     taxable_amount: Optional[float] = None
     tax_amount: Optional[float] = None    
     custom_fields: Optional[Dict[str, str]] = None
+    per_size_custom_fields: Optional[Dict[str, str]] = None
 
     def to_dict(self):
         return {
@@ -28,7 +29,8 @@ class StockItem(BaseModel):
             'hsn_code': self.hsn_code,
             'taxable_amount': self.taxable_amount,
             'tax_amount': self.tax_amount,
-            'custom_fields': self.custom_fields
+            'custom_fields': self.custom_fields,
+            'per_size_custom_fields': self.per_size_custom_fields
         }
 
 class ReturnedItem(BaseModel):

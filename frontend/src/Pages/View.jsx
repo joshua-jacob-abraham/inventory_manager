@@ -165,7 +165,13 @@ function ViewStock() {
         isCustom: true,
       }));
 
-      const all = [...fixed, ...custom];
+      const perSizeCustom = res.data.per_size_custom_fields_keys.map((key) => ({
+        key,
+        label: key.charAt(0).toUpperCase() + key.slice(1),
+        isCustom: true,
+      }));
+
+      const all = [...fixed, ...custom, ...perSizeCustom];
       setAvailableColumns(all);
       setSelectedColumns(INITIAL_COLUMNS);
       setPendingColumns(INITIAL_COLUMNS);
@@ -209,7 +215,20 @@ function ViewStock() {
       const excelUrl = URL.createObjectURL(excelBlob);
       const a = document.createElement("a");
       a.href = excelUrl;
-      a.download = `${storeName}_${fromDate}_${action}_stock.xlsx`;
+      const contentDisposition = response.headers["content-disposition"];
+
+      let filename = "download.xlsx";
+
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="([^"]+)"/);
+
+        if (match) {
+          filename = match[1];
+        }
+      }
+
+      a.download = filename;
+
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -410,6 +429,10 @@ function ViewStock() {
                 zIndex: 100,
                 minWidth: "200px",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                maxHeight: "300px",
+                overflowY: "auto",
+                scrollbarWidth: "none",
+                fontFamily: "Times New Roman, Times, serif",
               }}
             >
               <div
@@ -419,9 +442,13 @@ function ViewStock() {
                   marginBottom: "8px",
                 }}
               >
-                <strong style={{
-                  userSelect : "none",
-                }}>Select Columns</strong>
+                <strong
+                  style={{
+                    userSelect: "none",
+                  }}
+                >
+                  Select Columns
+                </strong>
                 <button
                   onClick={() => setShowColumnMenu(false)}
                   style={{
@@ -434,31 +461,37 @@ function ViewStock() {
                   ✕
                 </button>
               </div>
-
-              {availableColumns.map((col) => (
-                <label
-                  key={col.key}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    marginBottom: "6px",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={pendingColumns.includes(col.key)}
-                    onChange={() => togglePending(col.key)}
-                  />
-                  {col.label}
-                  {col.isCustom && (
-                    <span style={{ fontSize: "12px", color: "#888" }}>
-                      (custom)
-                    </span>
-                  )}
-                </label>
-              ))}
+              <div
+                style={{
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                }}
+              >
+                {availableColumns.map((col) => (
+                  <label
+                    key={col.key}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "6px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={pendingColumns.includes(col.key)}
+                      onChange={() => togglePending(col.key)}
+                    />
+                    {col.label}
+                    {col.isCustom && (
+                      <span style={{ fontSize: "12px", color: "#888" }}>
+                        (custom)
+                      </span>
+                    )}
+                  </label>
+                ))}
+              </div>
 
               <button
                 className="apply"

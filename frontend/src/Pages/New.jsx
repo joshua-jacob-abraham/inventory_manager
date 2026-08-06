@@ -83,11 +83,10 @@ function NewStock() {
     }));
     setFilteredStores([]);
     setSuggest(false);
-
-    handleStoreBlur(selectedName);
   };
 
   const defaultSizes = [
+    "10",
     "12",
     "14",
     "16",
@@ -97,7 +96,6 @@ function NewStock() {
     "24",
     "26",
     "28",
-    "30",
   ];
   const [customSizes, setCustomSizes] = useState([]);
   const sizes = [...new Set([...defaultSizes, ...customSizes])];
@@ -288,7 +286,7 @@ function NewStock() {
 
     for (let item of validStockItems) {
       const completeDesignCode =
-        item.size == 12
+        item.size == 10
           ? `${data.designCode}-R`
           : `${data.designCode}-${item.size}`;
 
@@ -305,10 +303,19 @@ function NewStock() {
           ]),
       );
 
+      const perSizeCustomFieldsObject = Object.fromEntries(
+        (item.per_size_custom_fields || [])
+          .filter((field) => field.value.trim() !== "")
+          .map((field) => [
+            field.name,
+            field.value.trim().replace(/\b\w/g, (c) => c.toUpperCase()),
+          ]),
+      );
+
       const payload = {
         item: capitalizedItem,
         design_code: upperDesignCode,
-        size: item.size == 12 ? "R" : item.size,
+        size: item.size == 10 ? "R" : item.size,
         price: parseFloat(item.price),
         quantity: parseInt(item.quantity, 10),
         gst_applicable: item.gst_applicable || false,
@@ -317,6 +324,7 @@ function NewStock() {
         taxable_amount: item.taxable_amount || null,
         tax_amount: item.tax_amount || 0,
         custom_fields: customFieldsObject,
+        per_size_custom_fields: perSizeCustomFieldsObject,
       };
 
       console.log(payload);
@@ -453,6 +461,7 @@ function NewStock() {
     }
 
     if (submissionSuccessful) {
+      console.log("Resetting form after successful submission.");
       setData({
         storeName: "",
         designCode: "",
@@ -466,14 +475,15 @@ function NewStock() {
 
       setFetchedDesigns([]);
       setCustomFields([]);
-
+      
       document
-        .querySelectorAll('.box .checkbox-wrapper-52 input[type="checkbox"]')
-        .forEach((checkbox) => {
-          checkbox.checked = false;
-        });
-
+      .querySelectorAll('.box .checkbox-wrapper-52 input[type="checkbox"]')
+      .forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+      
       setReset(true);
+      setPerSizeCustomFieldDefinitions([]);
 
       setTimeout(() => {
         setReset(false);
@@ -484,6 +494,21 @@ function NewStock() {
   };
 
   const [customFields, setCustomFields] = useState([]);
+  const [perSizeCustomFieldDefinitions, setPerSizeCustomFieldDefinitions] =
+    useState([]);
+
+  const handleAddPerSizeCustomField = (fieldName) => {
+    const fieldValue = fieldName.trim();
+
+    if (
+      fieldValue !== "" &&
+      !perSizeCustomFieldDefinitions.some(
+        (field) => field.toLowerCase() === fieldValue.toLowerCase(),
+      )
+    ) {
+      setPerSizeCustomFieldDefinitions((prev) => [...prev, fieldValue]);
+    }
+  };
 
   const baseRow = 3;
   const visibleFields = customFields.length + (addingCustomField ? 1 : 0);
@@ -491,29 +516,6 @@ function NewStock() {
   const tableRowStart = baseRow + change;
 
   const isShowable = visibleFields % 3 != 0;
-
-  const handleStoreBlur = async (e) => {
-    const storeNameToUse = (
-      typeof e === "string" ? e : (e?.target?.value ?? data.storeName ?? "")
-    ).trim();
-
-    if (!storeNameToUse.trim()) return;
-    try {
-      const res = await axios.get(
-        `http://localhost:8000/custom/${brandName}/${encodeURIComponent(storeNameToUse)}`,
-      );
-
-      if (res.data.fields) {
-        const formatted = res.data.fields.map((field) => ({
-          name: field,
-          value: "",
-        }));
-        setCustomFields(formatted);
-      }
-    } catch (err) {
-      console.error("Error fetching store fields", err);
-    }
-  };
 
   return (
     <div className="dashboard">
@@ -540,10 +542,6 @@ function NewStock() {
             value={data.storeName}
             onChange={handleStoreNameInputChange}
             onFocus={() => setSuggest(true)}
-            onBlur={handleStoreBlur}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleStoreBlur(e);
-            }}
           />
 
           {suggest && data.storeName.trim() !== "" && (
@@ -604,9 +602,11 @@ function NewStock() {
               <Checkbox
                 key={size}
                 id={size}
-                label={size == 12 ? `R` : `${size}"`}
+                label={size == 10 ? `R` : `${size}"`}
                 reset={resetCheck}
                 onChange={handleCheckboxChange}
+                customFieldDefinitions={perSizeCustomFieldDefinitions}
+                onAddCustomField={handleAddPerSizeCustomField}
               />
             ))}
 

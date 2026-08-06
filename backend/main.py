@@ -6,7 +6,7 @@ import mysql.connector as ms
 from fastapi.middleware.cors import CORSMiddleware
 from crud import insert_into_records
 from models import StockItem,ReturnedItem
-from services import add_to_stores, clear_temp_data, get_code_details, is_valid_name, lookupRange, make_valid_table_name, ordinal, reverse_table_name, set_custom_field_definitions, submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,lookupforprint,submit_sales_stock, safe_identifier
+from services import add_to_stores, clear_temp_data, get_code_details, is_valid_name, lookupRange, make_valid_table_name, ordinal, reverse_table_name, submit_new_stock,add_design_temp,temp_stock_data,from_shelf,lookup,add_design_temp_return,submit_returned_stock,remove_from_temp,lookupforprint,submit_sales_stock, safe_identifier
 from database import get_db_connection
 from datetime import datetime
 from openpyxl.styles import Font, Alignment
@@ -24,6 +24,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],  
     allow_headers=["*"],  
+    expose_headers=["Content-Disposition"],
 )
 
 #health check
@@ -37,35 +38,6 @@ async def check_db_health():
 	except Exception as e:
 		return JSONResponse(status_code=500, content={"mysql": "down", "error": str(e)})
 	
-#get custom fields set previous time
-@app.get("/custom/{brand_name}/{store_name}")
-async def getCustomFields(brand_name : str, store_name : str):
-	store_name = safe_identifier(make_valid_table_name(store_name))
-	brand_name = safe_identifier(make_valid_table_name(brand_name))
-
-	try:
-		connection = get_db_connection(brand_name)
-		cursor = connection.cursor()
-
-		cursor.execute("""SELECT custom_field_definitions FROM stores WHERE store_name = %s""", (store_name,))
-
-		result = cursor.fetchone()
-		if not result: 
-			return {"fields": []}
-
-		if result and result[0]:
-			fields = json.loads(result[0])
-		else:
-			fields = []
-
-		cursor.close()
-		connection.close()	
-
-		return {"fields": fields}
-
-	except Exception as e:
-		raise HTTPException(status_code=400, detail=str(e))	
-
 
 #rename brandname
 @app.post("/alter/brandname")
@@ -341,15 +313,19 @@ async def submition_handler(
 	formatted_date = date_obj.strftime("%d_%b_%Y")
 	
 	table_name = f"{store_name}_{formatted_date}_{action}"
+	connection = None
+	cursor = None
 
 	try:
 		connection = get_db_connection(brand_name)
+        
 		add_to_stores(store_name,connection)
 		
 		cursor = connection.cursor()
+            
 		insert_into_records(cursor,reverse_table_name(store_name),action,date)
-		connection.commit()
 		cursor.close()
+		cursor = None
 
 		if(action == "new"):
 			store_key = f"{store_name}_{formatted_date}_new_stock"
@@ -364,15 +340,27 @@ async def submition_handler(
 			table_name = f"{store_name}_{formatted_date}_sales_stock"
 			submit_sales_stock(store_name, store_key,table_name,formatted_date,connection)	
 
+		connection.commit()
+            
+		del temp_stock_data[store_key]
+		
 		connection.close()
 
 		return {
 			"message" : "Stock details submitted successfully"
 		}
-	
+
 	except Exception as e:
+		if connection:
+			connection.rollback()
 		raise HTTPException(status_code=500, detail=str(e))
-	
+
+	finally:
+		if cursor:
+			cursor.close()
+		if connection:
+			connection.close()
+
 #remove from temp
 @app.post("/remove/temp/{code}")
 async def remove(
@@ -432,7 +420,8 @@ async def get_columns(
 
         fixed_columns = []
         custom_field_keys = []
-
+        per_size_custom_fields_keys = []
+		
         for key, value in row.items():
             lower = key.lower()
             if lower == "custom_fields":
@@ -443,12 +432,20 @@ async def get_columns(
                         custom_field_keys = list(cf.keys())
                 except:
                     pass
+            elif lower == "per_size_custom_fields":
+                try:
+                    pcf = json.loads(value) if isinstance(value, str) else value
+                    if isinstance(pcf, dict):
+                        per_size_custom_fields_keys = list(pcf.keys())
+                except:
+                    pass
             else:
                 fixed_columns.append(key)
 
         return {
             "fixed_columns": fixed_columns,
-            "custom_field_keys": custom_field_keys
+            "custom_field_keys": custom_field_keys,
+            "per_size_custom_fields_keys" : per_size_custom_fields_keys
         }
 
     except HTTPException:
@@ -495,6 +492,18 @@ async def print_table_excel(
                         item[k] = v
             except:
                 pass
+        if "per_size_custom_fields" in item and item["per_size_custom_fields"]:
+            try:
+                pcf = (
+                    json.loads(item["per_size_custom_fields"])
+                    if isinstance(item["per_size_custom_fields"], str)
+                    else item["per_size_custom_fields"]
+                )
+                if isinstance(pcf, dict):
+                    for k, v in pcf.items():
+                        item[k] = v
+            except:
+                pass                
 
     # Define default columns
     all_possible = [
@@ -512,7 +521,7 @@ async def print_table_excel(
     # Add custom fields from first record
     first = stock_data[0]
     for key in first.keys():
-        if key not in [c[0] for c in all_possible] and key != "custom_fields":
+        if key not in [c[0] for c in all_possible] and key != "custom_fields" and key != "per_size_custom_fields":
             all_possible.append((key, key.title()))
 
     # Select columns based on user input or GST presence
@@ -575,7 +584,7 @@ async def print_table_excel(
         excel_bytes_io,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
-            "Content-Disposition": f"attachment; filename={store_name}_{formatted_date}_{action}_stock.xlsx"
+            "Content-Disposition": f'attachment; filename="{reverse_table_name(store_name).title()} {readable} {action.title()} stocks.xlsx"'
         }
     )
 

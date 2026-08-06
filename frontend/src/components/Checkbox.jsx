@@ -33,6 +33,7 @@ const Checkbox = ({
       }));
 
       setPerSizeCustomFields(clearedCustomFields);
+      resetPerSizeFieldsScroll();
 
       onChange(id, {
         price: "",
@@ -54,6 +55,7 @@ const Checkbox = ({
       }));
 
       setPerSizeCustomFields(clearedCustomFields);
+      resetPerSizeFieldsScroll();
 
       onChange(id, {
         price: "",
@@ -82,6 +84,15 @@ const Checkbox = ({
     setAddingCustomField(false);
   };
 
+  const perSizeFieldsRef = useRef(null);
+
+  const resetPerSizeFieldsScroll = () => {
+    perSizeFieldsRef.current?.scrollTo({
+      left: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <div className="box">
       <div className="checkbox-wrapper-52  sizeCheck">
@@ -104,7 +115,11 @@ const Checkbox = ({
         </label>
       </div>
 
-      <div className="perSizeFields">
+      <div
+        className="perSizeFields"
+        ref={perSizeFieldsRef}
+        onBlur={resetPerSizeFieldsScroll}
+      >
         <input
           type="text"
           placeholder="Price"
